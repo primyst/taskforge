@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { authConfig } from "@/lib/auth.config";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -12,11 +13,9 @@ const credentialsSchema = z.object({
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -29,52 +28,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(rawCredentials) {
-        // Never trust client input directly — validate shape first
         const parsed = credentialsSchema.safeParse(rawCredentials);
         if (!parsed.success) return null;
-
         const { email, password } = parsed.data;
 
         const user = await prisma.user.findUnique({
           where: { email },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            passwordHash: true,
-            emailVerified: true,
-          },
+          select: { id: true, name: true, email: true, image: true, passwordHash: true },
         });
 
-        // Deliberately vague failure — don't reveal whether email exists
         if (!user || !user.passwordHash) return null;
-
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) return null;
 
-        // Never return passwordHash beyond this point
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        };
+        return { id: user.id, name: user.name, email: user.email, image: user.image };
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user && token.id) {
-        session.user.id = token.id as string;
-      }
-      return session;
-    },
-  },
 });
