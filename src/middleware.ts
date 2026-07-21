@@ -1,16 +1,13 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = [
-  "/login",
-  "/register",
-  "/api/auth",
-  "/api/auth/register",
-];
+const { auth } = NextAuth(authConfig);
+
+const PUBLIC_ROUTES = ["/login", "/register", "/api/auth", "/api/auth/register"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-
   const isPublic = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
   if (isPublic) return NextResponse.next();
 
@@ -19,7 +16,6 @@ export default auth((req) => {
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
-
   return NextResponse.next();
 });
 
