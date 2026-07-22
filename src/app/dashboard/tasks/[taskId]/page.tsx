@@ -17,6 +17,7 @@ export default async function TaskDetailPage({
     redirect("/login");
   }
 
+  const userId = session.user.id;
   const { taskId } = await params;
 
   const task = await prisma.task.findUnique({
@@ -45,7 +46,7 @@ export default async function TaskDetailPage({
 
   const membership = await prisma.teamMember.findUnique({
     where: {
-      teamId_userId: { teamId: task.project.teamId, userId: session.user.id },
+      teamId_userId: { teamId: task.project.teamId, userId: userId },
     },
   });
 
@@ -131,7 +132,7 @@ export default async function TaskDetailPage({
                     <span className="text-[#5B6270]">
                       {(att.fileSize / 1024).toFixed(0)} KB
                     </span>
-                    {(att.uploadedById === session.user.id ||
+                    {(att.uploadedById === userId ||
                       membership.role === "OWNER" ||
                       membership.role === "ADMIN") && (
                       <DeleteAttachmentButton attachmentId={att.id} />
@@ -151,7 +152,7 @@ export default async function TaskDetailPage({
             ...c,
             createdAt: c.createdAt.toISOString(),
           }))}
-          currentUserId={session.user.id}
+          currentUserId={userId}
         />
       </section>
     </main>
