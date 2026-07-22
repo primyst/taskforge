@@ -85,6 +85,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const userId = session.user.id;
+
     const task = await prisma.task.findUnique({
       where: { id: taskId },
       select: { assigneeId: true, createdById: true, title: true },
@@ -92,7 +94,7 @@ export async function POST(req: NextRequest) {
 
     const notifyUserIds = new Set(
       [task?.assigneeId, task?.createdById].filter(
-        (id): id is string => !!id && id !== session.user.id
+        (id): id is string => !!id && id !== userId
       )
     );
 
