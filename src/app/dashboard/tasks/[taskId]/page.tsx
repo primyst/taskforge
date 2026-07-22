@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import CommentSection from "./comment-section";
+import AttachmentUpload from "./attachment-upload";
+import DeleteAttachmentButton from "./delete-attachment-button";
 import AppNav from "../../app-nav";
 
 export default async function TaskDetailPage({
@@ -107,28 +109,41 @@ export default async function TaskDetailPage({
         </div>
 
         {task.attachments.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="font-[family-name:var(--font-mono)] text-xs uppercase tracking-widest text-[#8B93A7] mb-3">
               Attachments
             </h2>
             <div className="space-y-2">
               {task.attachments.map((att) => (
-                <a
+                <div
                   key={att.id}
-                  href={att.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between bg-white/[0.04] border border-white/10 rounded-lg px-4 py-2.5 text-sm hover:border-white/20 transition-colors"
+                  className="flex items-center justify-between bg-white/[0.04] border border-white/10 rounded-lg px-4 py-2.5 text-sm"
                 >
-                  <span>{att.filename}</span>
-                  <span className="text-[#5B6270]">
-                    {(att.fileSize / 1024).toFixed(0)} KB
-                  </span>
-                </a>
+                  <a
+                    href={att.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    {att.filename}
+                  </a>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[#5B6270]">
+                      {(att.fileSize / 1024).toFixed(0)} KB
+                    </span>
+                    {(att.uploadedById === session.user.id ||
+                      membership.role === "OWNER" ||
+                      membership.role === "ADMIN") && (
+                      <DeleteAttachmentButton attachmentId={att.id} />
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         )}
+
+        <AttachmentUpload taskId={task.id} />
 
         <CommentSection
           taskId={task.id}
