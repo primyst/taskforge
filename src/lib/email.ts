@@ -31,7 +31,7 @@ async function sendEmail({
   }
 }
 
-const APP_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
+const APP_URL = process.env.NEXTAUTH_URL || "http://taskforgeai.vercel.app";
 
 const wrapper = (bodyHtml: string) => `
   <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
