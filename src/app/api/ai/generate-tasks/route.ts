@@ -94,6 +94,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const userId = session.user.id;
+
     const createdTasks = await prisma.$transaction(
       validated.data.tasks.map((t) =>
         prisma.task.create({
@@ -102,7 +104,7 @@ export async function POST(req: NextRequest) {
             description: t.description,
             priority: t.priority,
             projectId,
-            createdById: session.user.id,
+            createdById: userId,
             aiGenerated: true,
           },
         })
