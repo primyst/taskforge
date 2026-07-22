@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import CreateTeamForm from "./create-team-form";
+import NotificationBell from "./notification-bell";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -31,9 +32,12 @@ export default async function DashboardPage() {
         <span className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
           TaskForge
         </span>
-        <span className="text-sm text-[#8B93A7]">
-          {session.user.name ?? session.user.email}
-        </span>
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+          <span className="text-sm text-[#8B93A7]">
+            {session.user.name ?? session.user.email}
+          </span>
+        </div>
       </nav>
 
       <section className="max-w-6xl mx-auto px-6 pt-8 pb-24">
