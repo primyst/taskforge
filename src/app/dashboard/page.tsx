@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import CreateTeamForm from "./create-team-form";
-import NotificationBell from "./notification-bell";
+import AppNav from "./app-nav";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -28,17 +28,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[#0F1222] text-white">
-      <nav className="flex items-center justify-between px-6 py-5 max-w-6xl mx-auto">
-        <span className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-          TaskForge
-        </span>
-        <div className="flex items-center gap-3">
-          <NotificationBell />
-          <span className="text-sm text-[#8B93A7]">
-            {session.user.name ?? session.user.email}
-          </span>
-        </div>
-      </nav>
+      <AppNav userLabel={session.user.name ?? session.user.email ?? ""} />
 
       <section className="max-w-6xl mx-auto px-6 pt-8 pb-24">
         <div className="flex items-center justify-between mb-8">
