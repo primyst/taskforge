@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireTaskAccess } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { rateLimit } from "@/lib/rate-limit";
+import { sendCommentEmail } from "@/lib/email";
 
 const createCommentSchema = z.object({
   taskId: z.string().min(1),
@@ -69,13 +70,15 @@ export async function POST(req: NextRequest) {
   const { taskId, content } = parsed.data;
 
   try {
-    await requireTaskAccess(session.user.id, taskId);
+    const { task: taskRef } = await requireTaskAccess(session.user.id, taskId);
+
+    const userId = session.user.id;
 
     const comment = await prisma.comment.create({
       data: {
         content,
         taskId,
-        authorId: session.user.id,
+        authorId: userId,
       },
       select: {
         id: true,
@@ -84,8 +87,6 @@ export async function POST(req: NextRequest) {
         author: { select: { id: true, name: true, image: true } },
       },
     });
-
-    const userId = session.user.id;
 
     const task = await prisma.task.findUnique({
       where: { id: taskId },
@@ -100,13 +101,26 @@ export async function POST(req: NextRequest) {
 
     if (notifyUserIds.size > 0) {
       await prisma.notification.createMany({
-        data: Array.from(notifyUserIds).map((userId) => ({
-          userId,
+        data: Array.from(notifyUserIds).map((uid) => ({
+          userId: uid,
           type: "COMMENT" as const,
           message: `New comment on: ${task?.title}`,
           relatedTaskId: taskId,
         })),
       });
+
+      const usersToEmail = await prisma.user.findMany({
+        where: { id: { in: Array.from(notifyUserIds) } },
+        select: { email: true },
+      });
+      for (const u of usersToEmail) {
+        sendCommentEmail({
+          to: u.email,
+          taskTitle: task?.title ?? "a task",
+          taskId,
+          commenterName: session.user.name ?? "A teammate",
+        });
+      }
     }
 
     return NextResponse.json({ comment }, { status: 201 });
