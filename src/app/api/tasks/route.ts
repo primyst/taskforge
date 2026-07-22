@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireProjectAccess } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { rateLimit } from "@/lib/rate-limit";
+import { sendTaskAssignedEmail } from "@/lib/email";
 
 const createTaskSchema = z.object({
   title: z.string().min(1).max(200),
@@ -114,6 +115,19 @@ export async function POST(req: NextRequest) {
           relatedTaskId: task.id,
         },
       });
+
+      const assigneeUser = await prisma.user.findUnique({
+        where: { id: assigneeId },
+        select: { email: true },
+      });
+      if (assigneeUser) {
+        sendTaskAssignedEmail({
+          to: assigneeUser.email,
+          taskTitle: title,
+          taskId: task.id,
+          assignedByName: session.user.name ?? "A teammate",
+        });
+      }
     }
 
     return NextResponse.json({ task }, { status: 201 });
