@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import CommentSection from "./comment-section";
+import AppNav from "../../app-nav";
 
 export default async function TaskDetailPage({
   params,
@@ -59,17 +60,7 @@ export default async function TaskDetailPage({
 
   return (
     <main className="min-h-screen bg-[#0F1222] text-white">
-      <nav className="flex items-center justify-between px-6 py-5 max-w-3xl mx-auto">
-        <Link
-          href="/dashboard"
-          className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight"
-        >
-          TaskForge
-        </Link>
-        <span className="text-sm text-[#8B93A7]">
-          {session.user.name ?? session.user.email}
-        </span>
-      </nav>
+      <AppNav userLabel={session.user.name ?? session.user.email ?? ""} maxWidth="max-w-3xl" />
 
       <section className="max-w-3xl mx-auto px-6 pt-8 pb-24">
         <Link
