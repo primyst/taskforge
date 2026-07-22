@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import TaskBoard from "./task-board";
-import AppNav from "./app-nav";
+import AppNav from "../../app-nav";
 
 export default async function ProjectPage({
  params,
