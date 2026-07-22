@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { rateLimit } from "@/lib/rate-limit";
+import { sendTeamInviteEmail } from "@/lib/email";
 
 const inviteSchema = z.object({
   email: z.string().email(),
@@ -20,10 +21,9 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = session.user.id;
   const { teamId } = await params;
 
-  const { success } = rateLimit(`team:invite:${userId}`, 20, 60 * 60 * 1000);
+  const { success } = rateLimit(`team:invite:${session.user.id}`, 20, 60 * 60 * 1000);
   if (!success) {
     return NextResponse.json(
       { error: "Too many invites sent recently. Try again later." },
@@ -43,7 +43,7 @@ export async function POST(
   const { email, role } = parsed.data;
 
   try {
-    await requireRole(userId, teamId, "ADMIN");
+    await requireRole(session.user.id, teamId, "ADMIN");
 
     const invitedUser = await prisma.user.findUnique({ where: { email } });
 
@@ -81,6 +81,20 @@ export async function POST(
         message: `You were added to a team`,
       },
     });
+
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { name: true },
+    });
+
+    if (team) {
+      sendTeamInviteEmail({
+        to: invitedUser.email,
+        teamName: team.name,
+        teamId,
+        invitedByName: session.user.name ?? "A teammate",
+      });
+    }
 
     return NextResponse.json({ membership }, { status: 201 });
   } catch (error) {
