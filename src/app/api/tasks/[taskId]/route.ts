@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireTaskAccess, RbacError } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
+import { sendTaskAssignedEmail } from "@/lib/email";
 
 const updateTaskSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -112,6 +113,19 @@ export async function PATCH(
           relatedTaskId: task.id,
         },
       });
+
+      const assigneeUser = await prisma.user.findUnique({
+        where: { id: assigneeId },
+        select: { email: true },
+      });
+      if (assigneeUser) {
+        sendTaskAssignedEmail({
+          to: assigneeUser.email,
+          taskTitle: task.title,
+          taskId: task.id,
+          assignedByName: session.user.name ?? "A teammate",
+        });
+      }
     }
 
     return NextResponse.json({ task });
