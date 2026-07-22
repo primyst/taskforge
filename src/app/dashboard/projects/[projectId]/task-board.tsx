@@ -101,7 +101,12 @@ export default function TaskBoard({
                     className="bg-[#F7F8FB] text-[#0F1222] rounded-lg p-3 text-sm"
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <span className="font-medium">{task.title}</span>
+                      <Link
+  href={`/dashboard/tasks/${task.id}`}
+  className="font-medium hover:underline"
+>
+  {task.title}
+</Link>
                       {task.aiGenerated && (
                         <span className="shrink-0 font-[family-name:var(--font-mono)] text-[9px] bg-[#F5A623]/15 text-[#B36B00] rounded px-1.5 py-0.5">
                           AI
