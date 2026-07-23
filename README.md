@@ -6,7 +6,7 @@ Built as a portfolio project to demonstrate full-stack engineering with real aut
 
 ## Live demo
 
-[taskforgeai.vercel.app]
+[https://taskforgeai.vercel.app]
 
 ## Features
 
